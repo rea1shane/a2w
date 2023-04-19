@@ -65,9 +65,6 @@ func health(c *gin.Context) {
 
 // send 发送消息
 func send(c *gin.Context) {
-	data, _ := ioutil.ReadAll(c.Request.Body)
-	logger.Debug("接收到的 Alertmanager 消息: " + string(data))
-
 	// 获取 bot key
 	key := c.Query("key")
 
