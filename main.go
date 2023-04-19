@@ -65,6 +65,9 @@ func health(c *gin.Context) {
 
 // send 发送消息
 func send(c *gin.Context) {
+	data, _ := ioutil.ReadAll(c.Request.Body)
+	logger.Debug("接收到的 Alertmanager 消息: " + string(data))
+
 	// 获取 bot key
 	key := c.Query("key")
 
@@ -72,7 +75,7 @@ func send(c *gin.Context) {
 	decoder := json.NewDecoder(c.Request.Body)
 	var notification *Notification
 	if err := decoder.Decode(&notification); err != nil {
-		logger.Error(err)
+		logger.Error("解析 Alertmanager 消息错误: " + err.Error())
 		return
 	}
 
@@ -84,7 +87,7 @@ func send(c *gin.Context) {
 	tmpl := template.Must(template.New("message.tmpl").Funcs(tfm).ParseFiles("./templates/message.tmpl"))
 	var content bytes.Buffer
 	if err := tmpl.Execute(&content, notification); err != nil {
-		logger.Error(err)
+		logger.Error("填充模板错误: " + err.Error())
 		return
 	}
 
@@ -98,17 +101,13 @@ func send(c *gin.Context) {
 	postBodyBuffer := bytes.NewBuffer(postBody)
 	wecomResp, err := http.Post(webhookUrl+key, "application/json", postBodyBuffer)
 	if err != nil {
-		logger.Error("发起请求错误: " + err.Error())
+		logger.Error("发起企业微信请求错误: " + err.Error())
 		return
 	}
 	defer wecomResp.Body.Close()
 
 	// 处理请求结果
-	wecomRespBody, err := ioutil.ReadAll(wecomResp.Body)
-	if err != nil {
-		logger.Error(err)
-		return
-	}
+	wecomRespBody, _ := ioutil.ReadAll(wecomResp.Body)
 	if wecomResp.StatusCode != http.StatusOK {
 		logger.Error("请求企业微信失败，HTTP Code: ", strconv.Itoa(wecomResp.StatusCode), " 返回体: ", string(wecomRespBody))
 		c.Writer.WriteHeader(http.StatusBadRequest)
