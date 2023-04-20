@@ -1,4 +1,6 @@
-# Alertmanager to WeCom bot
+# Alertmanager to WeCom
+
+通过 [企业微信机器人](https://developer.work.weixin.qq.com/document/path/91770) 向企业微信发送 [Alertmanager](https://github.com/prometheus/alertmanager) 通知。
 
 ## 消息模板
 
