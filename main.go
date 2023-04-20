@@ -81,7 +81,7 @@ func send(c *gin.Context) {
 	tfm["timeFormat"] = timeFormat
 	tfm["timeDuration"] = timeDuration
 	tfm["timeFromNow"] = timeFromNow
-	tmpl := template.Must(template.New("message.tmpl").Funcs(tfm).ParseFiles("./templates/message.tmpl"))
+	tmpl := template.Must(template.New("base.tmpl").Funcs(tfm).ParseFiles("./templates/base.tmpl"))
 	var content bytes.Buffer
 	if err := tmpl.Execute(&content, notification); err != nil {
 		logger.Error("填充模板错误: " + err.Error())
