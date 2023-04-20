@@ -1,4 +1,4 @@
-module github.com/rea1shane/a2wcb
+module github.com/rea1shane/a2w
 
 go 1.20
 
