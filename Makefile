@@ -1,8 +1,16 @@
-run:
-	go run main.go
+.PHONY: run build docker-run docker-build clean
 
-build:
-	#TODO
+version="v0.1.0"
+
+run: build
+	bin/a2w
+
+build: clean
+	mkdir bin
+	go build -v -o bin/a2w ./...
+
+clean:
+	rm -rf bin
 
 docker-run:
 	#TODO
