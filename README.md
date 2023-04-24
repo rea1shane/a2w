@@ -30,9 +30,11 @@
 
 ## 消息模板
 
+消息模板决定了企业微信机器人发出的消息格式。
+
 ### `base.tmpl`
 
-在告警规则定义中，必须包含：
+若要使用该消息模板，在告警规则定义中必须包含：
 
 - `labels.level`：告警规则等级。
 
@@ -43,6 +45,20 @@
 
 ### `multiple-cluster.tmpl`
 
-与 [`base.tmpl`](#basetmpl) 相比，多了一个必选标签：
+使用该模板与使用 [`base.tmpl`](#basetmpl) 相比，多了一个必选标签：
 
 - `labels.cluster`：集群名称。
+
+## 构建项目
+
+编译二进制文件：
+
+```shell
+make build
+```
+
+或是构建 Docker 镜像：
+
+```shell
+make docker-build
+```
