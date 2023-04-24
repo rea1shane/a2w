@@ -16,7 +16,7 @@
    make docker-run
    ```
 
-1. 在企业微信中创建机器人，在机器人的“webhook 地址”中获取 `key` 值，webhook 样式为：https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key={key} 。
+1. 在企业微信中创建机器人，在机器人的“webhook 地址”中获取 `key` 值，webhook 样式为：`https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key={key}`。
 1. 修改 Alertmanager 配置文件：
 
    ```yaml
