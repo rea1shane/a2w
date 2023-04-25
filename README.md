@@ -16,6 +16,12 @@
    make docker-run
    ```
 
+   查看项目使用说明：
+
+   ```shell
+   make help
+   ```
+
 1. 在企业微信中创建机器人，在机器人的“webhook 地址”中获取 `key` 值，webhook 样式为：`https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key={key}`。
 1. 修改 Alertmanager 配置文件：
 
@@ -25,7 +31,7 @@
    receivers:
        - name: 'a2w'
            webhook_configs:
-               - url: 'http://{a2w_host}:5001/send?key={key}'
+               - url: 'http://{a2w_address}/send?key={key}'
    ```
 
 ## 消息模板

@@ -1,4 +1,4 @@
-.PHONY: run package build clean clean-build clean-package docker-run docker-build docker-rm-image
+.PHONY: help run package build clean clean-build clean-package docker-run docker-build docker-rm-image
 
 GOOS = $(shell go env GOOS)
 GOARCH = $(shell go env GOARCH)
@@ -6,7 +6,6 @@ GOARCH = $(shell go env GOARCH)
 APP_NAME = a2w
 VERSION = $(shell cat VERSION)
 
-ARGS = --port $(PORT) --template $(TEMPLATE)
 PORT = 5001
 TEMPLATE = ./templates/base.tmpl
 
@@ -19,8 +18,11 @@ PACKAGE_TEMP_DIR_NAME = $(APP_NAME)-$(VERSION).$(GOOS)-$(GOARCH)
 PACKAGE_TEMP_DIR_REFERENCE = $(PACKAGE_DIR)/$(PACKAGE_TEMP_DIR_NAME)
 PACKAGE_REFERENCE = $(PACKAGE_TEMP_DIR_REFERENCE).tar.gz
 
+help: build
+	$(BIN_REFERENCE) -h
+
 run: build
-	$(BIN_REFERENCE) $(ARGS)
+	$(BIN_REFERENCE) --port $(PORT) --template $(TEMPLATE)
 
 package: build clean-package
 	mkdir -p $(PACKAGE_TEMP_DIR_REFERENCE)
@@ -42,7 +44,7 @@ clean-package:
 	rm -rf $(PACKAGE_DIR)
 
 docker-run: docker-build
-	docker run --name $(APP_NAME) -d -p 5001:5001 rea1shane/a2w:$(VERSION) $(ARGS)
+	docker run --name $(APP_NAME) -d -p $(PORT):5001 rea1shane/a2w:$(VERSION) --template $(TEMPLATE)
 
 docker-build: docker-rm-image
 	docker build -t rea1shane/a2w:$(VERSION) .

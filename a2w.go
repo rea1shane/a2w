@@ -53,8 +53,9 @@ var (
 
 func main() {
 	port := flag.Int("port", 5001, "监听端口")
-
 	flag.StringVar(&tmpl, "template", "./templates/base.tmpl", "模板文件")
+	flag.Parse()
+
 	split := strings.Split(tmpl, "/")
 	tmplName = split[len(split)-1]
 
