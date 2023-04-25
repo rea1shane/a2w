@@ -3,10 +3,13 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/gin-gonic/gin"
+	myHttp "github.com/rea1shane/gooooo/http"
 	"github.com/rea1shane/gooooo/log"
 	myTime "github.com/rea1shane/gooooo/time"
+	"github.com/sirupsen/logrus"
 	"io/ioutil"
 	"net/http"
 	"strconv"
@@ -42,20 +45,18 @@ const (
 	webhookUrl = "https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key="
 )
 
-var (
-	logger = log.GetLogger()
-)
-
 func main() {
-	gin.SetMode(gin.ReleaseMode)
-	app := gin.Default()
+	logger := logrus.New()
+	formatter := log.GetFormatter()
+	formatter.FieldsOrder = []string{"StatusCode", "Latency"}
+	logger.SetFormatter(formatter)
+
+	app := myHttp.NewHandler(logger, 0)
+
 	app.GET("/", health)
 	app.POST("/send", send)
 
-	(&http.Server{
-		Addr:    fmt.Sprintf("0.0.0.0:%d", 9099),
-		Handler: app,
-	}).ListenAndServe()
+	app.Run(fmt.Sprintf("0.0.0.0:%d", 9099))
 }
 
 // health 健康检查
@@ -68,11 +69,13 @@ func send(c *gin.Context) {
 	// 获取 bot key
 	key := c.Query("key")
 
-	// 解析 Alertmanager 通知
+	// 解析 Alertmanager 消息
 	decoder := json.NewDecoder(c.Request.Body)
 	var notification *Notification
 	if err := decoder.Decode(&notification); err != nil {
-		logger.Error("解析 Alertmanager 消息错误: " + err.Error())
+		e := c.Error(err)
+		e.Meta = "解析 Alertmanager 消息失败"
+		c.Writer.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
@@ -84,7 +87,9 @@ func send(c *gin.Context) {
 	tmpl := template.Must(template.New("base.tmpl").Funcs(tfm).ParseFiles("./templates/base.tmpl"))
 	var content bytes.Buffer
 	if err := tmpl.Execute(&content, notification); err != nil {
-		logger.Error("填充模板错误: " + err.Error())
+		e := c.Error(err)
+		e.Meta = "填充模板失败"
+		c.Writer.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
@@ -98,7 +103,9 @@ func send(c *gin.Context) {
 	postBodyBuffer := bytes.NewBuffer(postBody)
 	wecomResp, err := http.Post(webhookUrl+key, "application/json", postBodyBuffer)
 	if err != nil {
-		logger.Error("发起企业微信请求错误: " + err.Error())
+		e := c.Error(err)
+		e.Meta = "发起企业微信请求错误"
+		c.Writer.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 	defer wecomResp.Body.Close()
@@ -106,13 +113,13 @@ func send(c *gin.Context) {
 	// 处理请求结果
 	wecomRespBody, _ := ioutil.ReadAll(wecomResp.Body)
 	if wecomResp.StatusCode != http.StatusOK {
-		logger.Error("请求企业微信失败，HTTP Code: ", strconv.Itoa(wecomResp.StatusCode), " 返回体: ", string(wecomRespBody))
-		c.Writer.WriteHeader(http.StatusBadRequest)
-		c.Writer.Write(wecomRespBody)
+		e := c.Error(errors.New(string(wecomRespBody)))
+		e.Meta = "请求企业微信失败，HTTP Code: " + strconv.Itoa(wecomResp.StatusCode)
+		c.Writer.WriteHeader(http.StatusInternalServerError)
 		return
 	}
+
 	c.Writer.WriteHeader(http.StatusOK)
-	c.Writer.Write(wecomRespBody)
 }
 
 // timeFormat 格式化时间

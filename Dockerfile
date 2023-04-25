@@ -13,6 +13,8 @@ RUN CGO_ENABLED=0 go build -v -o /usr/local/bin/a2w ./...
 
 FROM scratch
 
+ENV GIN_MODE=release
+
 WORKDIR /app
 
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/

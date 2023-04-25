@@ -44,8 +44,8 @@ github.com/pelletier/go-toml/v2 v2.0.6 h1:nrzqCb7j9cDFj2coyLNLaZuJTLjWjlaz6nvTvI
 github.com/pelletier/go-toml/v2 v2.0.6/go.mod h1:eumQOmlWiOPt5WriQQqoM5y18pDHwha2N+QD+EUNTek=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
-github.com/rea1shane/gooooo v0.2.0 h1:Xi8bYaZ2ZOTZEgsi7x1gWHaC4VAc6MGSPBrGLOQ0PSk=
-github.com/rea1shane/gooooo v0.2.0/go.mod h1:RQt4yS0foYi+pQlyM9ptrfwW7fN8fW6mzQx8uJT8IlE=
+github.com/rea1shane/gooooo v0.3.0 h1:M/saBRSP9RN9KhIThVAibeEFbfwuDJpnooJjp2ka0/o=
+github.com/rea1shane/gooooo v0.3.0/go.mod h1:UlIUtHo/WeJNDNiVinefYXYLs1GypmMHCLhg+5AtOFY=
 github.com/rogpeppe/go-internal v1.8.0 h1:FCbCCtXNOY3UtUuHUYaghJg4y7Fd14rXifAYUAtL9R8=
 github.com/sirupsen/logrus v1.9.0 h1:trlNQbNUG3OdDrDil03MCb1H2o9nJ1x4/5LYw7byDE0=
 github.com/sirupsen/logrus v1.9.0/go.mod h1:naHLuLoDiP4jHNo9R0sCBMtWGeIprob74mVsIT4qYEQ=
