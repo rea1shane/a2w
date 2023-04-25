@@ -25,7 +25,7 @@
    receivers:
        - name: 'a2w'
            webhook_configs:
-               - url: 'http://{a2w_host}:9099/send?key={key}'
+               - url: 'http://{a2w_host}:5001/send?key={key}'
    ```
 
 ## 消息模板

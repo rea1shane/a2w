@@ -6,6 +6,10 @@ GOARCH = $(shell go env GOARCH)
 APP_NAME = a2w
 VERSION = $(shell cat VERSION)
 
+ARGS = --port $(PORT) --template $(TEMPLATE)
+PORT = 5001
+TEMPLATE = ./templates/base.tmpl
+
 BIN_DIR = bin
 BIN_NAME = $(APP_NAME)
 BIN_REFERENCE = $(BIN_DIR)/$(BIN_NAME)
@@ -16,7 +20,7 @@ PACKAGE_TEMP_DIR_REFERENCE = $(PACKAGE_DIR)/$(PACKAGE_TEMP_DIR_NAME)
 PACKAGE_REFERENCE = $(PACKAGE_TEMP_DIR_REFERENCE).tar.gz
 
 run: build
-	$(BIN_REFERENCE)
+	$(BIN_REFERENCE) $(ARGS)
 
 package: build clean-package
 	mkdir -p $(PACKAGE_TEMP_DIR_REFERENCE)
@@ -38,7 +42,7 @@ clean-package:
 	rm -rf $(PACKAGE_DIR)
 
 docker-run: docker-build
-	docker run --name $(APP_NAME) -d -p 9099:9099 rea1shane/a2w:$(VERSION)
+	docker run --name $(APP_NAME) -d -p 5001:5001 rea1shane/a2w:$(VERSION) $(ARGS)
 
 docker-build: docker-rm-image
 	docker build -t rea1shane/a2w:$(VERSION) .

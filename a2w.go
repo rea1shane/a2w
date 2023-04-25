@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"flag"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	myHttp "github.com/rea1shane/gooooo/http"
@@ -13,6 +14,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strconv"
+	"strings"
 	"text/template"
 	"time"
 )
@@ -45,7 +47,17 @@ const (
 	webhookUrl = "https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key="
 )
 
+var (
+	tmpl, tmplName string
+)
+
 func main() {
+	port := flag.Int("port", 5001, "监听端口")
+
+	flag.StringVar(&tmpl, "template", "./templates/base.tmpl", "模板文件")
+	split := strings.Split(tmpl, "/")
+	tmplName = split[len(split)-1]
+
 	logger := logrus.New()
 	formatter := log.GetFormatter()
 	formatter.FieldsOrder = []string{"StatusCode", "Latency"}
@@ -56,7 +68,7 @@ func main() {
 	app.GET("/", health)
 	app.POST("/send", send)
 
-	app.Run(fmt.Sprintf("0.0.0.0:%d", 9099))
+	app.Run(fmt.Sprintf("0.0.0.0:%d", *port))
 }
 
 // health 健康检查
@@ -84,7 +96,7 @@ func send(c *gin.Context) {
 	tfm["timeFormat"] = timeFormat
 	tfm["timeDuration"] = timeDuration
 	tfm["timeFromNow"] = timeFromNow
-	tmpl := template.Must(template.New("base.tmpl").Funcs(tfm).ParseFiles("./templates/base.tmpl"))
+	tmpl := template.Must(template.New(tmplName).Funcs(tfm).ParseFiles(tmpl))
 	var content bytes.Buffer
 	if err := tmpl.Execute(&content, notification); err != nil {
 		e := c.Error(err)

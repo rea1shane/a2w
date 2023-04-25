@@ -21,6 +21,6 @@ COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 COPY --from=builder /usr/local/bin/a2w .
 COPY templates templates
 
-EXPOSE 9099
+EXPOSE 5001
 
 ENTRYPOINT ["./a2w"]
