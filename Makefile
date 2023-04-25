@@ -46,7 +46,7 @@ clean-package:
 docker-run: docker-build
 	docker run --name $(APP_NAME) -d -p $(PORT):5001 rea1shane/a2w:$(VERSION) --template $(TEMPLATE)
 
-docker-build: docker-rm-image
+docker-build:
 	docker build -t rea1shane/a2w:$(VERSION) .
 
 docker-rm-image:
