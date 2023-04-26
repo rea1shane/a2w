@@ -10,10 +10,16 @@
    make run
    ```
 
-   或是在 Docker 中部署：
+   或是部署在 Docker 中：
 
    ```shell
    make docker-run
+   ```
+
+   或是直接使用 [Docker Hub](https://hub.docker.com/r/rea1shane/a2w) 中已发布的镜像：
+
+   ```shell
+   docker run --name a2w -d -p 5001:5001 rea1shane/a2w
    ```
 
    查看项目使用说明：

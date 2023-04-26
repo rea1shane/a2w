@@ -18,6 +18,9 @@ PACKAGE_TEMP_DIR_NAME = $(APP_NAME)-$(VERSION).$(GOOS)-$(GOARCH)
 PACKAGE_TEMP_DIR_REFERENCE = $(PACKAGE_DIR)/$(PACKAGE_TEMP_DIR_NAME)
 PACKAGE_REFERENCE = $(PACKAGE_TEMP_DIR_REFERENCE).tar.gz
 
+DOCKER_REPO = rea1shane
+DOCKER_IMAGE_NAME = $(APP_NAME)
+
 help: build
 	$(BIN_REFERENCE) -h
 
@@ -44,10 +47,10 @@ clean-package:
 	rm -rf $(PACKAGE_DIR)
 
 docker-run: docker-build
-	docker run --name $(APP_NAME) -d -p $(PORT):5001 rea1shane/a2w:$(VERSION) --template $(TEMPLATE)
+	docker run --name $(APP_NAME) -d -p $(PORT):5001 $(DOCKER_REPO)/$(DOCKER_IMAGE_NAME):$(VERSION) --template $(TEMPLATE)
 
 docker-build:
-	docker build -t rea1shane/a2w:$(VERSION) .
+	docker build -t $(DOCKER_REPO)/$(DOCKER_IMAGE_NAME):$(VERSION) .
 
 docker-rm-image:
-	docker rmi rea1shane/a2w:$(VERSION)
+	docker rmi $(DOCKER_REPO)/$(DOCKER_IMAGE_NAME):$(VERSION)
