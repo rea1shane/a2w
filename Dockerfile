@@ -8,8 +8,8 @@ WORKDIR /usr/src/app
 COPY go.mod go.sum ./
 RUN go mod download && go mod verify
 
-COPY . .
-RUN CGO_ENABLED=0 go build -v -o /usr/local/bin/a2w ./...
+COPY a2w.go .
+RUN CGO_ENABLED=0 go build -o /usr/local/bin/a2w a2w.go
 
 FROM scratch
 
