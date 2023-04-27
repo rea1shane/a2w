@@ -45,6 +45,7 @@ type Alert struct {
 
 const (
 	webhookUrl = "https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key="
+	okMsg      = `{"errcode":0,"errmsg":"ok"}`
 )
 
 var (
@@ -125,7 +126,7 @@ func send(c *gin.Context) {
 
 	// 处理请求结果
 	wecomRespBody, _ := ioutil.ReadAll(wecomResp.Body)
-	if wecomResp.StatusCode != http.StatusOK {
+	if wecomResp.StatusCode != http.StatusOK || string(wecomRespBody) != okMsg {
 		e := c.Error(errors.New(string(wecomRespBody)))
 		e.Meta = "请求企业微信失败，HTTP Code: " + strconv.Itoa(wecomResp.StatusCode)
 		c.Writer.WriteHeader(http.StatusInternalServerError)
