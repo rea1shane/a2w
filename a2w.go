@@ -11,7 +11,7 @@ import (
 	"github.com/rea1shane/gooooo/log"
 	myTime "github.com/rea1shane/gooooo/time"
 	"github.com/sirupsen/logrus"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"strconv"
 	"strings"
@@ -125,7 +125,7 @@ func send(c *gin.Context) {
 	defer wecomResp.Body.Close()
 
 	// 处理请求结果
-	wecomRespBody, _ := ioutil.ReadAll(wecomResp.Body)
+	wecomRespBody, _ := io.ReadAll(wecomResp.Body)
 	if wecomResp.StatusCode != http.StatusOK || string(wecomRespBody) != okMsg {
 		e := c.Error(errors.New(string(wecomRespBody)))
 		e.Meta = "请求企业微信失败，HTTP Code: " + strconv.Itoa(wecomResp.StatusCode)
