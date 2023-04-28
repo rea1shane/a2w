@@ -1,11 +1,11 @@
 {{ range $i, $alert := .Alerts }}
 {{ if eq $alert.Status "firing" }}
-**告警名称**: <font color="warning">**{{ $alert.Labels.alertname }}**</font>
+<font color="warning">**[firing] {{ $alert.Labels.alertname }}**</font>
 **警报等级**: {{ $alert.Labels.level }}
 **触发时间**: {{ timeFormat ($alert.StartsAt) }}
 **持续时长**: {{ timeFromNow ($alert.StartsAt) }}
 {{ else if eq $alert.Status "resolved"}}
-**告警名称**: <font color="info">**{{ $alert.Labels.alertname }}**</font>
+<font color="info">**[resolved] {{ $alert.Labels.alertname }}**</font>
 **触发时间**: {{ timeFormat ($alert.StartsAt) }}
 **恢复时间**: {{ timeFormat ($alert.EndsAt) }}
 **持续时长**: {{ timeDuration ($alert.StartsAt) ($alert.EndsAt) }}
