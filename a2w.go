@@ -61,7 +61,7 @@ func main() {
 	tmplName = split[len(split)-1]
 
 	logger := logrus.New()
-	formatter := log.GetFormatter()
+	formatter := log.NewFormatter()
 	formatter.FieldsOrder = []string{"StatusCode", "Latency"}
 	logger.SetFormatter(formatter)
 
