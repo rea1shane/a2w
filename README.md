@@ -1,5 +1,7 @@
 # Alertmanager to WeCom
 
+[![docker-image-ci](https://github.com/rea1shane/a2w/actions/workflows/docker-image-ci.yml/badge.svg)](https://github.com/rea1shane/a2w/actions/workflows/docker-image-ci.yml)
+
 通过 [企业微信机器人](https://developer.work.weixin.qq.com/document/path/91770) 向企业微信发送 [Alertmanager](https://github.com/prometheus/alertmanager) 通知。
 
 ## 使用方式
@@ -33,11 +35,11 @@
 
    ```yaml
    route:
-     receiver: 'a2w'
+     receiver: "a2w"
    receivers:
-     - name: 'a2w'
+     - name: "a2w"
        webhook_configs:
-         - url: 'http://{a2w_address}/send?key={key}'
+         - url: "http://{a2w_address}/send?key={key}"
    ```
 
 ## 消息模板
