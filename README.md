@@ -33,11 +33,11 @@
 
    ```yaml
    route:
-       receiver: 'a2w'
+     receiver: 'a2w'
    receivers:
-       - name: 'a2w'
-           webhook_configs:
-               - url: 'http://{a2w_address}/send?key={key}'
+     - name: 'a2w'
+       webhook_configs:
+         - url: 'http://{a2w_address}/send?key={key}'
    ```
 
 ## 消息模板
