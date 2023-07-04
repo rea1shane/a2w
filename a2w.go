@@ -50,16 +50,7 @@ const (
 
 var (
 	tmplPath, tmplName string
-	tfm                template.FuncMap
 )
-
-// 准备模板函数
-func init() {
-	tfm = make(template.FuncMap)
-	tfm["timeFormat"] = timeFormat
-	tfm["timeDuration"] = timeDuration
-	tfm["timeFromNow"] = timeFromNow
-}
 
 func main() {
 	port := flag.Int("port", 5001, "监听端口")
@@ -103,6 +94,10 @@ func send(c *gin.Context) {
 	}
 
 	// 填充模板
+	var tfm = make(template.FuncMap)
+	tfm["timeFormat"] = timeFormat
+	tfm["timeDuration"] = timeDuration
+	tfm["timeFromNow"] = timeFromNow
 	tmpl := template.Must(template.New(tmplName).Funcs(tfm).ParseFiles(tmplPath))
 	var content bytes.Buffer
 	if err := tmpl.Execute(&content, notification); err != nil {
