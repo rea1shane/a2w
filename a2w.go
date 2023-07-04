@@ -49,15 +49,15 @@ const (
 )
 
 var (
-	tmpl, tmplName string
+	tmplPath, tmplName string
 )
 
 func main() {
 	port := flag.Int("port", 5001, "监听端口")
-	flag.StringVar(&tmpl, "template", "./templates/base.tmpl", "模板文件")
+	flag.StringVar(&tmplPath, "template", "./templates/base.tmpl", "模板文件")
 	flag.Parse()
 
-	split := strings.Split(tmpl, "/")
+	split := strings.Split(tmplPath, "/")
 	tmplName = split[len(split)-1]
 
 	logger := logrus.New()
@@ -98,7 +98,7 @@ func send(c *gin.Context) {
 	tfm["timeFormat"] = timeFormat
 	tfm["timeDuration"] = timeDuration
 	tfm["timeFromNow"] = timeFromNow
-	tmpl := template.Must(template.New(tmplName).Funcs(tfm).ParseFiles(tmpl))
+	tmpl := template.Must(template.New(tmplName).Funcs(tfm).ParseFiles(tmplPath))
 	var content bytes.Buffer
 	if err := tmpl.Execute(&content, notification); err != nil {
 		e := c.Error(err)
