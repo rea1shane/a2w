@@ -154,30 +154,32 @@ func send(c *gin.Context) {
 		msgs = append(msgs, msgBuffer.String())
 	}
 
-	// 请求企业微信
-	postBody, _ := json.Marshal(map[string]interface{}{
-		"msgtype": "markdown",
-		"markdown": map[string]interface{}{
-			"content": content.String(),
-		},
-	})
-	postBodyBuffer := bytes.NewBuffer(postBody)
-	wecomResp, err := http.Post(webhookUrl+key, "application/json", postBodyBuffer)
-	if err != nil {
-		e := c.Error(err)
-		e.Meta = "发起企业微信请求失败"
-		c.Writer.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-	defer wecomResp.Body.Close()
+	for _, msg := range msgs {
+		// 请求企业微信
+		postBody, _ := json.Marshal(map[string]interface{}{
+			"msgtype": "markdown",
+			"markdown": map[string]interface{}{
+				"content": msg,
+			},
+		})
+		postBodyBuffer := bytes.NewBuffer(postBody)
+		wecomResp, err := http.Post(webhookUrl+key, "application/json", postBodyBuffer)
+		if err != nil {
+			e := c.Error(err)
+			e.Meta = "发起企业微信请求失败"
+			c.Writer.WriteHeader(http.StatusInternalServerError)
+			return
+		}
 
-	// 处理请求结果
-	wecomRespBody, _ := io.ReadAll(wecomResp.Body)
-	if wecomResp.StatusCode != http.StatusOK || string(wecomRespBody) != okMsg {
-		e := c.Error(errors.New(string(wecomRespBody)))
-		e.Meta = "请求企业微信失败，HTTP Code: " + strconv.Itoa(wecomResp.StatusCode)
-		c.Writer.WriteHeader(http.StatusInternalServerError)
-		return
+		// 处理请求结果
+		wecomRespBody, _ := io.ReadAll(wecomResp.Body)
+		wecomResp.Body.Close()
+		if wecomResp.StatusCode != http.StatusOK || string(wecomRespBody) != okMsg {
+			e := c.Error(errors.New(string(wecomRespBody)))
+			e.Meta = "请求企业微信失败，HTTP Code: " + strconv.Itoa(wecomResp.StatusCode)
+			c.Writer.WriteHeader(http.StatusInternalServerError)
+			return
+		}
 	}
 
 	c.Writer.WriteHeader(http.StatusOK)
