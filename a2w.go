@@ -165,6 +165,7 @@ func send(c *gin.Context) {
 	wecomResp, err := http.Post(webhookUrl+key, "application/json", postBodyBuffer)
 	if err != nil {
 		e := c.Error(err)
+		e.Meta = "发起企业微信请求失败"
 		c.Writer.WriteHeader(http.StatusInternalServerError)
 		return
 	}
