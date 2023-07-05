@@ -114,7 +114,7 @@ func send(c *gin.Context) {
 		msgs = append(msgs, content.String())
 	} else {
 		// 分段消息标识头
-		msgHeader := `<font color="comment">**(%d/%d)**</font>`
+		msgHeader := `<font color="comment">(%d/%d)</font>`
 		// 单条分段最大长度，预留一些空间用于添加分段头和容错
 		msgMaxLen := 4096 - 128
 		// 分段条数
