@@ -122,7 +122,8 @@ func send(c *gin.Context) {
 		msgsLen := content.Len()/msgMaxLen + 1
 
 		// 消息切割
-		contentSnippets := bytes.Split(content.Bytes(), []byte("\n\n"))
+		// 企业微信中，连续至少三个的换行符才被视为两个换行符
+		contentSnippets := bytes.Split(content.Bytes(), []byte("\n\n\n"))
 
 		// 消息构造器
 		var msgBuffer bytes.Buffer
@@ -147,7 +148,7 @@ func send(c *gin.Context) {
 				msgBuffer.Write([]byte(fmt.Sprintf(msgHeader, msgIndex, msgsLen)))
 			}
 
-			msgBuffer.Write([]byte("\n\n"))
+			msgBuffer.Write([]byte("\n\n\n"))
 			msgBuffer.Write(contentSnippet)
 		}
 
