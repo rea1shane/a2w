@@ -107,6 +107,53 @@ func send(c *gin.Context) {
 		return
 	}
 
+	// 消息分段
+	// 为了解决企业微信 Markdown 消息体 4096 长度限制问题
+	var msgs []string
+	if content.Len() <= 4096 {
+		msgs = append(msgs, content.String())
+	} else {
+		// 分段消息标识头
+		msgHeader := `<font color="comment">**(%d/%d)**</font>`
+		// 单条分段最大长度，预留一些空间用于添加分段头和容错
+		msgMaxLen := 4096 - 128
+		// 分段条数
+		// 因为企业微信机器人接口每分钟频率是 20 条，当消息分段超过 20 条时可能会有部分消息发送失败
+		msgsLen := content.Len()/msgMaxLen + 1
+
+		// 消息切割
+		contentSnippets := bytes.Split(content.Bytes(), []byte("\n\n"))
+
+		// 消息构造器
+		var msgBuffer bytes.Buffer
+		msgIndex := 1
+		msgBuffer.Write([]byte(fmt.Sprintf(msgHeader, msgIndex, msgsLen)))
+
+		// 拼接消息
+		for _, contentSnippet := range contentSnippets {
+			// 切割后的单条消息都过长
+			if len(contentSnippet) > msgMaxLen {
+				e := c.Error(errors.New(fmt.Sprintf("单条告警消息长度 %d 仍超出片段长度限制 %d", len(contentSnippet), msgMaxLen)))
+				e.Meta = "消息分段失败"
+				c.Writer.WriteHeader(http.StatusBadRequest)
+				return
+			}
+
+			// 拼接消息后超出限制长度
+			if msgBuffer.Len()+len(contentSnippet) > msgMaxLen {
+				msgs = append(msgs, msgBuffer.String())
+				msgBuffer.Reset()
+				msgIndex++
+				msgBuffer.Write([]byte(fmt.Sprintf(msgHeader, msgIndex, msgsLen)))
+			}
+
+			msgBuffer.Write([]byte("\n\n"))
+			msgBuffer.Write(contentSnippet)
+		}
+
+		msgs = append(msgs, msgBuffer.String())
+	}
+
 	// 请求企业微信
 	postBody, _ := json.Marshal(map[string]interface{}{
 		"msgtype": "markdown",
@@ -118,7 +165,6 @@ func send(c *gin.Context) {
 	wecomResp, err := http.Post(webhookUrl+key, "application/json", postBodyBuffer)
 	if err != nil {
 		e := c.Error(err)
-		e.Meta = "发起企业微信请求错误"
 		c.Writer.WriteHeader(http.StatusInternalServerError)
 		return
 	}
