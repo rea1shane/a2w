@@ -44,8 +44,9 @@ type Alert struct {
 }
 
 const (
-	webhookUrl = "https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key="
-	okMsg      = `{"errcode":0,"errmsg":"ok"}`
+	webhookUrl     = "https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key="
+	okMsg          = `{"errcode":0,"errmsg":"ok"}`
+	markdownMaxLen = 4096 // markdownMaxLen 企业微信 Markdown 消息体最大长度为 4096
 )
 
 var (
@@ -108,25 +109,23 @@ func send(c *gin.Context) {
 	}
 
 	// 消息分段
-	// 为了解决企业微信 Markdown 消息体 4096 长度限制问题
+	// 为了解决企业微信 Markdown 消息体长度限制问题
 	var msgs []string
-	if content.Len() <= 4096 {
+	if content.Len() <= markdownMaxLen {
 		msgs = append(msgs, content.String())
 	} else {
 		// 分段消息标识头
 		snippetHeader := `<font color="comment">**(%d/%d)**</font>`
 
 		// 单条分段最大长度，预留一些空间用于添加分段头和容错
-		snippetMaxLen := 4096 - 128
+		snippetMaxLen := markdownMaxLen - 128
 
 		// 消息切割
 		// 企业微信中，连续至少三个的换行符才被视为两个换行符
-		fragments := bytes.Split(content.Bytes(), []byte("\n\n\n"))
+		fragments := strings.Split(content.String(), "\n\n\n")
 
-		var (
-			snippetBuffer bytes.Buffer
-			snippetList   [][]byte
-		)
+		var snippetBuilder strings.Builder
+		snippetBuilder.Grow(markdownMaxLen)
 
 		// 拼接消息
 		for _, fragment := range fragments {
@@ -139,24 +138,25 @@ func send(c *gin.Context) {
 			}
 
 			// 拼接消息后超出限制长度
-			if snippetBuffer.Len()+len(fragment) > snippetMaxLen {
-				snippetList = append(snippetList, snippetBuffer.Bytes())
-				snippetBuffer.Reset()
+			if snippetBuilder.Len()+len(fragment) > snippetMaxLen {
+				msgs = append(msgs, snippetBuilder.String())
+				snippetBuilder.Reset()
+				snippetBuilder.Grow(markdownMaxLen)
 			}
 
-			snippetBuffer.Write([]byte("\n\n\n"))
-			snippetBuffer.Write(fragment)
+			snippetBuilder.WriteString("\n\n\n")
+			snippetBuilder.WriteString(fragment)
 		}
 
-		snippetList = append(snippetList, snippetBuffer.Bytes())
-		snippetBuffer.Reset()
+		msgs = append(msgs, snippetBuilder.String())
 
 		// 添加分段头
-		for index, snippet := range snippetList {
-			snippetBuffer.Write([]byte(fmt.Sprintf(snippetHeader, index+1, len(snippetList))))
-			snippetBuffer.Write(snippet)
-			msgs = append(msgs, snippetBuffer.String())
-			snippetBuffer.Reset()
+		for index, snippet := range msgs {
+			snippetBuilder.Reset()
+			snippetBuilder.Grow(markdownMaxLen)
+			snippetBuilder.WriteString(fmt.Sprintf(snippetHeader, index+1, len(msgs)))
+			snippetBuilder.WriteString(snippet)
+			msgs[index] = snippetBuilder.String()
 		}
 	}
 
