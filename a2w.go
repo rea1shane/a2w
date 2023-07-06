@@ -122,7 +122,6 @@ func send(c *gin.Context) {
 		snippetMaxLen := markdownMaxLen - 128
 
 		// 消息切割
-		// 企业微信中，连续至少三个的换行符才被视为两个换行符
 		fragments := strings.Split(content.String(), emptyLine)
 
 		var snippetBuilder strings.Builder
