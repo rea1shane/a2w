@@ -114,45 +114,50 @@ func send(c *gin.Context) {
 		msgs = append(msgs, content.String())
 	} else {
 		// 分段消息标识头
-		msgHeader := `<font color="comment">**(%d/%d)**</font>`
+		snippetHeader := `<font color="comment">**(%d/%d)**</font>`
+
 		// 单条分段最大长度，预留一些空间用于添加分段头和容错
-		msgMaxLen := 4096 - 128
-		// 分段条数
-		// 因为企业微信机器人接口每分钟频率是 20 条，当消息分段超过 20 条时可能会有部分消息发送失败
-		msgsLen := content.Len()/msgMaxLen + 1
+		snippetMaxLen := 4096 - 128
 
 		// 消息切割
 		// 企业微信中，连续至少三个的换行符才被视为两个换行符
-		contentSnippets := bytes.Split(content.Bytes(), []byte("\n\n\n"))
+		fragments := bytes.Split(content.Bytes(), []byte("\n\n\n"))
 
-		// 消息构造器
-		var msgBuffer bytes.Buffer
-		msgIndex := 1
-		msgBuffer.Write([]byte(fmt.Sprintf(msgHeader, msgIndex, msgsLen)))
+		var (
+			snippetBuffer bytes.Buffer
+			snippetList   [][]byte
+		)
 
 		// 拼接消息
-		for _, contentSnippet := range contentSnippets {
+		for _, fragment := range fragments {
 			// 切割后的单条消息都过长
-			if len(contentSnippet) > msgMaxLen {
-				e := c.Error(errors.New(fmt.Sprintf("单条告警消息长度 %d 仍超出片段长度限制 %d", len(contentSnippet), msgMaxLen)))
-				e.Meta = "消息分段失败"
+			if len(fragment) > snippetMaxLen {
+				e := c.Error(errors.New(fmt.Sprintf("切割后的消息长度 %d 仍超出片段长度限制 %d", len(fragment), snippetMaxLen)))
+				e.Meta = "分段消息失败"
 				c.Writer.WriteHeader(http.StatusBadRequest)
 				return
 			}
 
 			// 拼接消息后超出限制长度
-			if msgBuffer.Len()+len(contentSnippet) > msgMaxLen {
-				msgs = append(msgs, msgBuffer.String())
-				msgBuffer.Reset()
-				msgIndex++
-				msgBuffer.Write([]byte(fmt.Sprintf(msgHeader, msgIndex, msgsLen)))
+			if snippetBuffer.Len()+len(fragment) > snippetMaxLen {
+				snippetList = append(snippetList, snippetBuffer.Bytes())
+				snippetBuffer.Reset()
 			}
 
-			msgBuffer.Write([]byte("\n\n\n"))
-			msgBuffer.Write(contentSnippet)
+			snippetBuffer.Write([]byte("\n\n\n"))
+			snippetBuffer.Write(fragment)
 		}
 
-		msgs = append(msgs, msgBuffer.String())
+		snippetList = append(snippetList, snippetBuffer.Bytes())
+		snippetBuffer.Reset()
+
+		// 添加分段头
+		for index, snippet := range snippetList {
+			snippetBuffer.Write([]byte(fmt.Sprintf(snippetHeader, index+1, len(snippetList))))
+			snippetBuffer.Write(snippet)
+			msgs = append(msgs, snippetBuffer.String())
+			snippetBuffer.Reset()
+		}
 	}
 
 	for _, msg := range msgs {
