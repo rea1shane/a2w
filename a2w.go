@@ -119,13 +119,13 @@ func send(c *gin.Context) {
 		snippetHeader := `<font color="comment">**(%d/%d)**</font>`
 
 		// 单条分段最大长度，预留一些空间用于添加分段头和容错
-		snippetMaxLen := markdownMaxLen - 128
+		snippetMaxLen := markdownMaxLen - len(snippetHeader)
 
 		// 消息切割
 		fragments := strings.Split(content.String(), emptyLine)
 
 		var snippetBuilder strings.Builder
-		snippetBuilder.Grow(markdownMaxLen)
+		snippetBuilder.Grow(snippetMaxLen)
 
 		// 拼接消息
 		for _, fragment := range fragments {
@@ -138,10 +138,10 @@ func send(c *gin.Context) {
 			}
 
 			// 拼接消息后超出限制长度
-			if snippetBuilder.Len()+len(fragment) > snippetMaxLen {
+			if snippetBuilder.Len()+len(fragment)+len(emptyLine) > snippetMaxLen {
 				msgs = append(msgs, snippetBuilder.String())
 				snippetBuilder.Reset()
-				snippetBuilder.Grow(markdownMaxLen)
+				snippetBuilder.Grow(snippetMaxLen)
 			}
 
 			snippetBuilder.WriteString(emptyLine)
