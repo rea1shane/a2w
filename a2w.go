@@ -44,8 +44,10 @@ type Alert struct {
 }
 
 const (
-	webhookUrl = "https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key="
-	okMsg      = `{"errcode":0,"errmsg":"ok"}`
+	webhookUrl     = "https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key="
+	okMsg          = `{"errcode":0,"errmsg":"ok"}`
+	markdownMaxLen = 4096     // markdownMaxLen 企业微信 Markdown 消息体最大长度为 4096
+	emptyLine      = "\n\n\n" // emptyLine 在企业微信中，连续至少三个的换行符才被视为一个空行
 )
 
 var (
@@ -108,50 +110,54 @@ func send(c *gin.Context) {
 	}
 
 	// 消息分段
-	// 为了解决企业微信 Markdown 消息体 4096 长度限制问题
+	// 为了解决企业微信 Markdown 消息体长度限制问题
 	var msgs []string
-	if content.Len() <= 4096 {
+	if content.Len() <= markdownMaxLen {
 		msgs = append(msgs, content.String())
 	} else {
 		// 分段消息标识头
-		msgHeader := `<font color="comment">**(%d/%d)**</font>`
+		snippetHeader := `<font color="comment">**(%d/%d)**</font>`
+
 		// 单条分段最大长度，预留一些空间用于添加分段头和容错
-		msgMaxLen := 4096 - 128
-		// 分段条数
-		// 因为企业微信机器人接口每分钟频率是 20 条，当消息分段超过 20 条时可能会有部分消息发送失败
-		msgsLen := content.Len()/msgMaxLen + 1
+		snippetMaxLen := markdownMaxLen - len(snippetHeader)
 
 		// 消息切割
-		contentSnippets := bytes.Split(content.Bytes(), []byte("\n\n"))
+		fragments := strings.Split(content.String(), emptyLine)
 
-		// 消息构造器
-		var msgBuffer bytes.Buffer
-		msgIndex := 1
-		msgBuffer.Write([]byte(fmt.Sprintf(msgHeader, msgIndex, msgsLen)))
+		var snippetBuilder strings.Builder
+		snippetBuilder.Grow(snippetMaxLen)
 
 		// 拼接消息
-		for _, contentSnippet := range contentSnippets {
+		for _, fragment := range fragments {
 			// 切割后的单条消息都过长
-			if len(contentSnippet) > msgMaxLen {
-				e := c.Error(errors.New(fmt.Sprintf("单条告警消息长度 %d 仍超出片段长度限制 %d", len(contentSnippet), msgMaxLen)))
-				e.Meta = "消息分段失败"
+			if len(fragment)+len(emptyLine) > snippetMaxLen {
+				e := c.Error(errors.New(fmt.Sprintf("切割后的消息长度 %d 仍超出片段长度限制 %d", len(fragment), snippetMaxLen-len(emptyLine))))
+				e.Meta = "分段消息失败"
 				c.Writer.WriteHeader(http.StatusBadRequest)
 				return
 			}
 
 			// 拼接消息后超出限制长度
-			if msgBuffer.Len()+len(contentSnippet) > msgMaxLen {
-				msgs = append(msgs, msgBuffer.String())
-				msgBuffer.Reset()
-				msgIndex++
-				msgBuffer.Write([]byte(fmt.Sprintf(msgHeader, msgIndex, msgsLen)))
+			if snippetBuilder.Len()+len(fragment)+len(emptyLine) > snippetMaxLen {
+				msgs = append(msgs, snippetBuilder.String())
+				snippetBuilder.Reset()
+				snippetBuilder.Grow(snippetMaxLen)
 			}
 
-			msgBuffer.Write([]byte("\n\n"))
-			msgBuffer.Write(contentSnippet)
+			snippetBuilder.WriteString(emptyLine)
+			snippetBuilder.WriteString(fragment)
 		}
 
-		msgs = append(msgs, msgBuffer.String())
+		msgs = append(msgs, snippetBuilder.String())
+
+		// 添加分段头
+		for index, snippet := range msgs {
+			snippetBuilder.Reset()
+			snippetBuilder.Grow(markdownMaxLen)
+			snippetBuilder.WriteString(fmt.Sprintf(snippetHeader, index+1, len(msgs)))
+			snippetBuilder.WriteString(snippet)
+			msgs[index] = snippetBuilder.String()
+		}
 	}
 
 	for _, msg := range msgs {
