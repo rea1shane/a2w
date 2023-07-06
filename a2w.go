@@ -118,7 +118,7 @@ func send(c *gin.Context) {
 		// 分段消息标识头
 		snippetHeader := `<font color="comment">**(%d/%d)**</font>`
 
-		// 单条分段最大长度，预留一些空间用于添加分段头和容错
+		// 单条分段最大长度
 		snippetMaxLen := markdownMaxLen - len(snippetHeader)
 
 		// 消息切割
