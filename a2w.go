@@ -130,8 +130,8 @@ func send(c *gin.Context) {
 		// 拼接消息
 		for _, fragment := range fragments {
 			// 切割后的单条消息都过长
-			if len(fragment) > snippetMaxLen {
-				e := c.Error(errors.New(fmt.Sprintf("切割后的消息长度 %d 仍超出片段长度限制 %d", len(fragment), snippetMaxLen)))
+			if len(fragment)+len(emptyLine) > snippetMaxLen {
+				e := c.Error(errors.New(fmt.Sprintf("切割后的消息长度 %d 仍超出片段长度限制 %d", len(fragment), snippetMaxLen-len(emptyLine))))
 				e.Meta = "分段消息失败"
 				c.Writer.WriteHeader(http.StatusBadRequest)
 				return
