@@ -46,7 +46,8 @@ type Alert struct {
 const (
 	webhookUrl     = "https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key="
 	okMsg          = `{"errcode":0,"errmsg":"ok"}`
-	markdownMaxLen = 4096 // markdownMaxLen 企业微信 Markdown 消息体最大长度为 4096
+	markdownMaxLen = 4096     // markdownMaxLen 企业微信 Markdown 消息体最大长度为 4096
+	emptyLine      = "\n\n\n" // emptyLine 在企业微信中，连续至少三个的换行符才被视为一个空行
 )
 
 var (
@@ -122,7 +123,7 @@ func send(c *gin.Context) {
 
 		// 消息切割
 		// 企业微信中，连续至少三个的换行符才被视为两个换行符
-		fragments := strings.Split(content.String(), "\n\n\n")
+		fragments := strings.Split(content.String(), emptyLine)
 
 		var snippetBuilder strings.Builder
 		snippetBuilder.Grow(markdownMaxLen)
@@ -144,7 +145,7 @@ func send(c *gin.Context) {
 				snippetBuilder.Grow(markdownMaxLen)
 			}
 
-			snippetBuilder.WriteString("\n\n\n")
+			snippetBuilder.WriteString(emptyLine)
 			snippetBuilder.WriteString(fragment)
 		}
 
