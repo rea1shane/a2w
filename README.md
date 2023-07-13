@@ -2,7 +2,7 @@
 
 [![docker-image-ci](https://github.com/rea1shane/a2w/actions/workflows/docker-image-ci.yml/badge.svg)](https://github.com/rea1shane/a2w/actions/workflows/docker-image-ci.yml)
 
-通过 [企业微信机器人](https://developer.work.weixin.qq.com/document/path/91770) 向企业微信发送 [Alertmanager](https://github.com/prometheus/alertmanager) 通知。
+通过 [企业微信机器人](https://developer.work.weixin.qq.com/document/path/91770) 发送 [Alertmanager](https://github.com/prometheus/alertmanager) 通知。
 
 ## 使用方式
 
