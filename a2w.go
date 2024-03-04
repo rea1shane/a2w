@@ -6,17 +6,18 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	"github.com/gin-gonic/gin"
-	myHttp "github.com/rea1shane/gooooo/http"
-	"github.com/rea1shane/gooooo/log"
-	myTime "github.com/rea1shane/gooooo/time"
-	"github.com/sirupsen/logrus"
 	"io"
 	"net/http"
 	"strconv"
 	"strings"
 	"text/template"
 	"time"
+
+	"github.com/gin-gonic/gin"
+	myHttp "github.com/rea1shane/gooooo/http"
+	"github.com/rea1shane/gooooo/log"
+	myTime "github.com/rea1shane/gooooo/time"
+	"github.com/sirupsen/logrus"
 )
 
 // Notification Alertmanager 发送的告警通知
@@ -202,7 +203,7 @@ func timeDuration(startTime, endTime time.Time) string {
 	return myTime.FormatDuration(duration)
 }
 
-// timeFromNow 计算当前时间距开始时间地时间差
+// timeFromNow 计算当前时间距开始时间的时间差
 func timeFromNow(startTime time.Time) string {
 	return timeDuration(startTime, time.Now())
 }
