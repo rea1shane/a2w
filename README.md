@@ -42,6 +42,16 @@
          - url: "http://{a2w_address}/send?key={key}"
    ```
 
+## 时区
+
+程序使用本地时区格式化时间。
+
+Docker 镜像的默认时区为 `Asia/Shanghai`。如果想要修改 Docker 镜像的时区，可以在 `docker run` 时使用参数 `-e TZ={TIME_ZONE}` 进行指定，如：
+
+```shell
+docker run --name a2w -d -p 5001:5001 -e TZ=Asia/Tokyo rea1shane/a2w
+```
+
 ## 消息模板
 
 消息模板决定了企业微信机器人发出的消息格式，修改 `Makefile` 中的 `TEMPLATE` 变量的值来选择模板。
