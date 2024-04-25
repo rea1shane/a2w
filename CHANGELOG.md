@@ -2,7 +2,13 @@
 
 本项目所有值得注意的变化都将记录在这个文件中。
 
-本文件格式基于 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.0.0/)，并且本项目遵守 [Semantic Versioning](https://semver.org/lang/zh-CN/) 版本更新规则。
+本文件格式基于 [Keep a Changelog](https://keepachangelog.com/zh-CN/)，并且本项目遵守 [Semantic Versioning](https://semver.org/lang/zh-CN/) 版本更新规则。
+
+## [0.1.6](https://github.com/rea1shane/a2w/compare/0.1.5...0.1.6) - 2024-04-25
+
+### 已添加
+
+- 为 Docker 镜像设置时区。([#4](https://github.com/rea1shane/a2w/issues/4))
 
 ## [0.1.5](https://github.com/rea1shane/a2w/compare/0.1.4...0.1.5) - 2023-07-06
 
