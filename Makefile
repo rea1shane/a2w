@@ -54,3 +54,9 @@ docker-build:
 
 docker-rm-image:
 	docker rmi $(DOCKER_REPO)/$(DOCKER_IMAGE_NAME):$(VERSION)
+
+helm-install: docker-build
+	helm install $(APP_NAME) helm-chart
+
+helm-uninstall:
+	helm uninstall $(APP_NAME)
