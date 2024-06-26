@@ -25,7 +25,7 @@
    docker run --name a2w -d -p 5001:5001 rea1shane/a2w
    ```
 
-   或是通过 Helm 在 Kubernetes 中部署：
+   或是通过 Helm 部署在 Kubernetes 中：
 
    ```shell
    make helm-install
