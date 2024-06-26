@@ -2,7 +2,8 @@
 
 [![docker-image-ci](https://github.com/rea1shane/a2w/actions/workflows/docker-image-ci.yml/badge.svg)](https://github.com/rea1shane/a2w/actions/workflows/docker-image-ci.yml)
 
-通过 [企业微信机器人](https://developer.work.weixin.qq.com/document/path/91770) 发送 [Prometheus](https://github.com/prometheus/prometheus) [Alertmanager](https://github.com/prometheus/alertmanager) 通知。
+通过 [企业微信机器人](https://developer.work.weixin.qq.com/document/path/91770) 发送 [Alertmanager](https://github.com/prometheus/alertmanager)
+通知。
 
 ## 使用方式
 
@@ -22,6 +23,12 @@
 
    ```shell
    docker run --name a2w -d -p 5001:5001 rea1shane/a2w
+   ```
+
+   或是通过 Helm 在 Kubernetes 中部署：
+
+   ```shell
+   make helm-install
    ```
 
    查看项目使用说明：
