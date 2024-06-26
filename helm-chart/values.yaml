@@ -45,6 +45,9 @@ service:
 
 containerPort: 5001
 
+env:
+  TZ: Asia/Shanghai
+
 ingress:
   enabled: false
   className: ""
@@ -75,11 +78,11 @@ resources: {}
 
 livenessProbe:
   httpGet:
-    path: /
+    path: /ok
     port: http
 readinessProbe:
   httpGet:
-    path: /
+    path: /ok
     port: http
 
 autoscaling:
