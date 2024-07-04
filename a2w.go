@@ -56,9 +56,17 @@ var (
 )
 
 func main() {
-	port := flag.Int("port", 5001, "监听端口")
+	// TODO: github.com/rea1shane/gooooo 工具库中可以添加 logrus 相关逻辑，类似 https://github.com/DesistDaydream/logging/blob/main/pkg/logrus_init/init.go
+	logLevel := flag.String("log-level", "info", "日志级别:[debug, info, warn, error, fatal]")
+	addr := flag.String("addr", ":5001", "监听地址. 格式: [host]:port")
 	flag.StringVar(&tmplPath, "template", "./templates/base.tmpl", "模板文件")
 	flag.Parse()
+
+	ll, err := logrus.ParseLevel(*logLevel)
+	if err != nil {
+		logrus.Panic("日志级别解析失败")
+	}
+	logrus.SetLevel(ll)
 
 	split := strings.Split(tmplPath, "/")
 	tmplName = split[len(split)-1]
@@ -73,7 +81,7 @@ func main() {
 	app.GET("/", health)
 	app.POST("/send", send)
 
-	app.Run(fmt.Sprintf("0.0.0.0:%d", *port))
+	app.Run(*addr)
 }
 
 // health 健康检查
@@ -85,7 +93,21 @@ func health(c *gin.Context) {
 func send(c *gin.Context) {
 	// 获取 bot key
 	key := c.Query("key")
+	// 获取要 @ 的人
 	atSomeone := c.Query("at")
+
+	if logrus.GetLevel() == logrus.DebugLevel {
+		body := c.Request.Body
+		b, err := io.ReadAll(body)
+		if err != nil {
+			e := c.Error(err)
+			e.Meta = "读取请求体失败"
+			c.Writer.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		logrus.Debugf(string(b))
+		c.Request.Body = io.NopCloser(bytes.NewBuffer(b))
+	}
 
 	// 解析 Alertmanager 消息
 	decoder := json.NewDecoder(c.Request.Body)
@@ -172,6 +194,7 @@ func send(c *gin.Context) {
 			}
 			msg += idtext
 		}
+
 		// 请求企业微信
 		postBody, _ := json.Marshal(map[string]interface{}{
 			"msgtype": "markdown",
