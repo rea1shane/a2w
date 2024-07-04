@@ -85,6 +85,7 @@ func health(c *gin.Context) {
 func send(c *gin.Context) {
 	// 获取 bot key
 	key := c.Query("key")
+	atSomeone := c.Query("at")
 
 	// 解析 Alertmanager 消息
 	decoder := json.NewDecoder(c.Request.Body)
@@ -162,6 +163,15 @@ func send(c *gin.Context) {
 	}
 
 	for _, msg := range msgs {
+		// 将 @ 指定人的信息添加到最后
+		if atSomeone != "" {
+			userid := strings.Split(atSomeone, ",")
+			idtext := ""
+			for _, id := range userid {
+				idtext += fmt.Sprintf("<@%v>", id)
+			}
+			msg += idtext
+		}
 		// 请求企业微信
 		postBody, _ := json.Marshal(map[string]interface{}{
 			"msgtype": "markdown",

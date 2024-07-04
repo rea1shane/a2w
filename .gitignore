@@ -20,3 +20,5 @@
 ## execuable file
 bin
 packages
+
+/.vscode

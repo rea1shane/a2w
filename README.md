@@ -48,6 +48,14 @@
          - url: "http://{a2w_address}/send?key={key}"
    ```
 
+### AT 指定人
+
+在 URL 中添加 at 参数
+
+`https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key={key}&at={user_id,...}`
+
+多个 user_id 以 `,` 分割
+
 ## 时区
 
 程序使用本地时区格式化时间。
