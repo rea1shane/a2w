@@ -36,6 +36,16 @@
    make help
    ```
 
+   输出：
+
+   ```
+   Usage of bin/a2w:
+      -port int
+            监听端口 (default 5001)
+      -template string
+            模板文件 (default "./templates/base.tmpl")
+   ```
+
 1. 在企业微信中创建机器人，在机器人的“webhook 地址”中获取 `key` 值，webhook 样式为：`https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key={key}`。
 1. 修改 Alertmanager 配置文件：
 
@@ -60,11 +70,14 @@ docker run --name a2w -d -p 5001:5001 -e TZ=Asia/Tokyo rea1shane/a2w
 
 ## 消息模板
 
-消息模板决定了企业微信机器人发出的消息格式，修改 `Makefile` 中的 `TEMPLATE` 变量的值来选择模板。
+消息模板决定了企业微信机器人发出的消息格式，模板的使用注意事项请看同路径下的同名 Markdown 文件。
 
-模板的使用注意事项请看同路径下的同名 Markdown 文件。
+### 自定义消息模板
 
-因为企业微信机器人接口限制单条消息的最大长度为 4096，所以本软件会对大于此限制的长消息进行分段。如果你使用自定义模板，请在想要分段的地方留一个空行（在企业微信中，至少三个连续的 `\n` 才被认为是一个空行），以便本软件对消息进行正确的分段。
+消息模板使用 `text/template` 库解析 Alertmanager 发送的请求体来进行填充，请求体中包含了 [Prometheus alerting rule](https://prometheus.io/docs/prometheus/latest/configuration/alerting_rules/#templating) 中的信息。
+
+> [!NOTE]
+> 因为企业微信机器人接口限制单条消息的最大长度为 4096，所以本软件会对大于此限制的长消息进行分段。如果你使用自定义模板，请在想要分段的地方留一个空行（在企业微信中，至少三个连续的 `\n` 才被认为是一个空行），以便本软件对消息进行正确的分段。
 
 ## 构建项目
 
