@@ -1,4 +1,5 @@
 {{ range $i, $alert := .Alerts }}
+
     {{- if eq $alert.Status "firing" }}
 <font color="warning">**[firing] {{ $alert.Labels.alertname }}**</font>
     {{- if $alert.Labels.level }}
@@ -21,4 +22,5 @@
     {{- if $alert.Annotations.mentions }}
 **相关人员**: {{ $alert.Annotations.mentions }}
     {{- end }}
+
 {{ end }}
