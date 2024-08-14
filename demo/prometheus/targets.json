@@ -14,5 +14,15 @@
     "labels": {
       "job": "alertmanager"
     }
+  },
+  {
+    "targets": [
+      "domain1:10000",
+      "domain2:10000",
+      "domain3:10000"
+    ],
+    "labels": {
+      "job": "tester"
+    }
   }
 ]
