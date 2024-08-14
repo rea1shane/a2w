@@ -15,10 +15,9 @@
 # vendor/
 
 .idea
+.vscode
 .DS_Store
 
 ## execuable file
 bin
 packages
-
-/.vscode
