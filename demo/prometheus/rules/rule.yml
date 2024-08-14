@@ -7,3 +7,4 @@ groups:
           level: critical
         annotations:
           labels: instance="{{ $labels.instance }}", job="{{ $labels.job }}"
+          mentions: <@user1>

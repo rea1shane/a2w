@@ -1,13 +1,11 @@
 # `base.tmpl`
 
-Prometheus rule 中必须包含：
+Prometheus rule 中可以选择包含：
 
 - `labels.level`：告警规则等级。
-
-可以选择包含：
-
 - `annotations.current`：当前状态的表达式结果值，可以通过 `{{ $value }}` 获取。
 - `annotations.labels`：可以定位到该告警实例的标签列表。
+- `annotations.mentions`：通知人员列表。
 
 示例：
 
@@ -27,9 +25,8 @@ groups:
       - alert: High disk usage
         expr: (1 - node_filesystem_free_bytes / node_filesystem_size_bytes) * 100 > 85
         for: 15m
-        labels:
-          level: warning
         annotations:
           current: "{{ $value }}% usage"
           labels: instance="{{ $labels.instance }}", device="{{ $labels.device }}", fstype="{{ $labels.fstype }}", mountpoint="{{ $labels.mountpoint }}"
+          mentions: <@user1>, <@user2>
 ```
