@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/rea1shane/gooooo/data"
 	myHttp "github.com/rea1shane/gooooo/http"
 	"github.com/rea1shane/gooooo/log"
 	myTime "github.com/rea1shane/gooooo/time"
@@ -53,34 +54,40 @@ const (
 
 var (
 	tmplPath, tmplName string
+	logger             *logrus.Logger
 )
 
 func main() {
-	// TODO: github.com/rea1shane/gooooo 工具库中可以添加 logrus 相关逻辑，类似 https://github.com/DesistDaydream/logging/blob/main/pkg/logrus_init/init.go
-	logLevel := flag.String("log-level", "info", "日志级别:[debug, info, warn, error, fatal]")
-	addr := flag.String("addr", ":5001", "监听地址. 格式: [host]:port")
-	flag.StringVar(&tmplPath, "template", "./templates/base.tmpl", "模板文件")
+	// 解析命令行参数
+	logLevel := flag.String("log-level", "info", "日志级别。可选值：debug, info, warn, error")
+	addr := flag.String("addr", ":5001", "监听地址。格式: [host]:port")
+	flag.StringVar(&tmplPath, "template", "./templates/base.tmpl", "模板文件路径。")
 	flag.Parse()
 
-	ll, err := logrus.ParseLevel(*logLevel)
+	// 解析日志级别
+	level, err := logrus.ParseLevel(*logLevel)
 	if err != nil {
-		logrus.Panic("日志级别解析失败")
+		logrus.Panicf("日志级别解析失败: %s", *logLevel)
 	}
-	logrus.SetLevel(ll)
 
+	// 解析模板文件名称
 	split := strings.Split(tmplPath, "/")
 	tmplName = split[len(split)-1]
 
-	logger := logrus.New()
+	// 创建 logger
+	logger = logrus.New()
+	logger.SetLevel(level)
 	formatter := log.NewFormatter()
 	formatter.FieldsOrder = []string{"StatusCode", "Latency"}
 	logger.SetFormatter(formatter)
 
+	// 创建 Gin
 	app := myHttp.NewHandler(logger, 0)
 
 	app.GET("/", health)
 	app.POST("/send", send)
 
+	// 启动
 	app.Run(*addr)
 }
 
@@ -106,23 +113,20 @@ func send(c *gin.Context) {
 	mentionSnippet := mentionsBuilder.String()
 	mentionSnippetLen := len(mentionSnippet)
 
-	if logrus.GetLevel() == logrus.DebugLevel {
-		body := c.Request.Body
-		b, err := io.ReadAll(body)
-		if err != nil {
-			e := c.Error(err)
-			e.Meta = "读取请求体失败"
-			c.Writer.WriteHeader(http.StatusInternalServerError)
-			return
-		}
-		logrus.Debugf(string(b))
-		c.Request.Body = io.NopCloser(bytes.NewBuffer(b))
+	// 读取 Alertmanager 消息
+	body, err := io.ReadAll(c.Request.Body)
+	if err != nil {
+		e := c.Error(err)
+		e.Meta = "读取 Alertmanager 消息失败"
+		c.Writer.WriteHeader(http.StatusBadRequest)
+		return
 	}
+	logger.Debugf("Alertmanager request body: %s", string(body))
 
 	// 解析 Alertmanager 消息
-	decoder := json.NewDecoder(c.Request.Body)
 	var notification *Notification
-	if err := decoder.Decode(&notification); err != nil {
+	err = data.UnmarshalBytes(body, &notification, data.JsonFormat)
+	if err != nil {
 		e := c.Error(err)
 		e.Meta = "解析 Alertmanager 消息失败"
 		c.Writer.WriteHeader(http.StatusBadRequest)
