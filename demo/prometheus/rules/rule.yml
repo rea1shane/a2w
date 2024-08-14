@@ -3,7 +3,6 @@ groups:
     rules:
       - alert: Service down
         expr: up == 0
-        for: 5m
         labels:
           level: critical
         annotations:

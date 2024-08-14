@@ -11,4 +11,5 @@
 **恢复时间**: {{ timeFormat ($alert.EndsAt) }}
 **持续时长**: {{ timeDuration ($alert.StartsAt) ($alert.EndsAt) }}
 {{ end }}{{ if $alert.Annotations.labels }}**标签列表**: {{ $alert.Annotations.labels }}{{ end }}
+{{ if $alert.Annotations.mentions }}**相关人员**: {{ $alert.Annotations.mentions }}{{ end }}
 {{ end }}
