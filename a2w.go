@@ -93,8 +93,18 @@ func health(c *gin.Context) {
 func send(c *gin.Context) {
 	// 获取 bot key
 	key := c.Query("key")
-	// 获取要 @ 的人
-	atSomeone := c.Query("at")
+
+	// 获取提醒列表
+	mentions, exist := c.GetQueryArray("mention")
+	var mentionsBuilder strings.Builder
+	if exist {
+		mentionsBuilder.WriteString(emptyLine)
+		for _, mention := range mentions {
+			mentionsBuilder.WriteString(fmt.Sprintf("<@%v>", mention))
+		}
+	}
+	mentionSnippet := mentionsBuilder.String()
+	mentionSnippetLen := len(mentionSnippet)
 
 	if logrus.GetLevel() == logrus.DebugLevel {
 		body := c.Request.Body
@@ -136,14 +146,14 @@ func send(c *gin.Context) {
 	// 消息分段
 	// 为了解决企业微信 Markdown 消息体长度限制问题
 	var msgs []string
-	if content.Len() <= markdownMaxLen {
-		msgs = append(msgs, content.String())
+	if content.Len()+mentionSnippetLen <= markdownMaxLen {
+		msgs = append(msgs, content.String()+mentionSnippet)
 	} else {
 		// 分段消息标识头
 		snippetHeader := `<font color="comment">**(%d/%d)**</font>`
 
 		// 单条分段最大长度
-		snippetMaxLen := markdownMaxLen - len(snippetHeader)
+		snippetMaxLen := markdownMaxLen - len(snippetHeader) - mentionSnippetLen
 
 		// 消息切割
 		fragments := strings.Split(content.String(), emptyLine)
@@ -163,6 +173,8 @@ func send(c *gin.Context) {
 
 			// 拼接消息后超出限制长度
 			if snippetBuilder.Len()+len(fragment)+len(emptyLine) > snippetMaxLen {
+				// 添加提醒列表
+				snippetBuilder.WriteString(mentionSnippet)
 				msgs = append(msgs, snippetBuilder.String())
 				snippetBuilder.Reset()
 				snippetBuilder.Grow(snippetMaxLen)
@@ -172,6 +184,8 @@ func send(c *gin.Context) {
 			snippetBuilder.WriteString(fragment)
 		}
 
+		// 添加提醒列表
+		snippetBuilder.WriteString(mentionSnippet)
 		msgs = append(msgs, snippetBuilder.String())
 
 		// 添加分段头
@@ -185,16 +199,6 @@ func send(c *gin.Context) {
 	}
 
 	for _, msg := range msgs {
-		// 将 @ 指定人的信息添加到最后
-		if atSomeone != "" {
-			userid := strings.Split(atSomeone, ",")
-			idtext := ""
-			for _, id := range userid {
-				idtext += fmt.Sprintf("<@%v>", id)
-			}
-			msg += idtext
-		}
-
 		// 请求企业微信
 		postBody, _ := json.Marshal(map[string]interface{}{
 			"msgtype": "markdown",
