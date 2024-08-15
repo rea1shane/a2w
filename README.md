@@ -48,6 +48,10 @@
          - url: "http://{a2w_address}/send?key={key}"
    ```
 
+## 演示
+
+要想查看 A2W 的演示，请查看 [`demo`](https://github.com/rea1shane/a2w/tree/main/demo) 文件夹中的内容。
+
 ## 时区
 
 程序使用本地时区格式化时间。

@@ -1,0 +1,10 @@
+groups:
+  - name: Test
+    rules:
+      - alert: Service status updated
+        expr: up == 1
+        labels:
+          level: critical
+        annotations:
+          current: "{{ $value }}"
+          labels: instance="{{ $labels.instance }}", job="{{ $labels.job }}"
