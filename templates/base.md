@@ -1,5 +1,9 @@
 # `base.tmpl`
 
+效果图：
+
+![](base.png)
+
 Prometheus rule 中可以选择添加以下内容：
 
 - `labels.level`：告警规则等级。
