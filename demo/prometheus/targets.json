@@ -14,15 +14,5 @@
     "labels": {
       "job": "alertmanager"
     }
-  },
-  {
-    "targets": [
-      "host1:10000",
-      "host2:10000",
-      "host3:10000"
-    ],
-    "labels": {
-      "job": "non_existent_exporter"
-    }
   }
 ]
