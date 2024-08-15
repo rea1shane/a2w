@@ -1,0 +1,9 @@
+groups:
+  - name: Prometheus
+    rules:
+      - alert: Service down
+        expr: up == 0
+        labels:
+          level: critical
+        annotations:
+          labels: instance="{{ $labels.instance }}", job="{{ $labels.job }}"
