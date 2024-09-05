@@ -1,0 +1,28 @@
+services:
+  prometheus:
+    container_name: prometheus
+    image: prom/prometheus
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--web.enable-lifecycle"
+    volumes:
+      - ./prometheus:/etc/prometheus
+    ports:
+      - 9090:9090
+    restart: unless-stopped
+
+  alertmanager:
+    container_name: alertmanager
+    image: prom/alertmanager
+    command:
+      - "--config.file=/etc/alertmanager/alertmanager.yml"
+    volumes:
+      - ./alertmanager:/etc/alertmanager
+    ports:
+      - 9093:9093
+    restart: unless-stopped
+
+  a2w:
+    container_name: a2w
+    image: rea1shane/a2w
+    restart: unless-stopped
