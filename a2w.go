@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/rea1shane/gooooo/data"
 	myHttp "github.com/rea1shane/gooooo/http"
 	"github.com/rea1shane/gooooo/log"
 	myTime "github.com/rea1shane/gooooo/time"
@@ -53,27 +54,41 @@ const (
 
 var (
 	tmplPath, tmplName string
+	logger             *logrus.Logger
 )
 
 func main() {
-	port := flag.Int("port", 5001, "监听端口")
-	flag.StringVar(&tmplPath, "template", "./templates/base.tmpl", "模板文件")
+	// 解析命令行参数
+	logLevel := flag.String("log-level", "info", "日志级别。可选值：debug, info, warn, error")
+	addr := flag.String("addr", ":5001", "监听地址。格式: [host]:port")
+	flag.StringVar(&tmplPath, "template", "./templates/base.tmpl", "模板文件路径。")
 	flag.Parse()
 
+	// 解析日志级别
+	level, err := logrus.ParseLevel(*logLevel)
+	if err != nil {
+		logrus.Panicf("日志级别解析失败: %s", *logLevel)
+	}
+
+	// 解析模板文件名称
 	split := strings.Split(tmplPath, "/")
 	tmplName = split[len(split)-1]
 
-	logger := logrus.New()
+	// 创建 logger
+	logger = logrus.New()
+	logger.SetLevel(level)
 	formatter := log.NewFormatter()
 	formatter.FieldsOrder = []string{"StatusCode", "Latency"}
 	logger.SetFormatter(formatter)
 
+	// 创建 Gin
 	app := myHttp.NewHandler(logger, 0)
 
 	app.GET("/", health)
 	app.POST("/send", send)
 
-	app.Run(fmt.Sprintf("0.0.0.0:%d", *port))
+	// 启动
+	app.Run(*addr)
 }
 
 // health 健康检查
@@ -86,10 +101,32 @@ func send(c *gin.Context) {
 	// 获取 bot key
 	key := c.Query("key")
 
+	// 获取提醒列表
+	mentions, exist := c.GetQueryArray("mention")
+	var mentionsBuilder strings.Builder
+	if exist {
+		mentionsBuilder.WriteString(emptyLine)
+		for _, mention := range mentions {
+			mentionsBuilder.WriteString(fmt.Sprintf("<@%v>", mention))
+		}
+	}
+	mentionSnippet := mentionsBuilder.String()
+	mentionSnippetLen := len(mentionSnippet)
+
+	// 读取 Alertmanager 消息
+	body, err := io.ReadAll(c.Request.Body)
+	if err != nil {
+		e := c.Error(err)
+		e.Meta = "读取 Alertmanager 消息失败"
+		c.Writer.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	logger.Debugf("Alertmanager request body: %s", string(body))
+
 	// 解析 Alertmanager 消息
-	decoder := json.NewDecoder(c.Request.Body)
 	var notification *Notification
-	if err := decoder.Decode(&notification); err != nil {
+	err = data.UnmarshalBytes(body, &notification, data.JsonFormat)
+	if err != nil {
 		e := c.Error(err)
 		e.Meta = "解析 Alertmanager 消息失败"
 		c.Writer.WriteHeader(http.StatusBadRequest)
@@ -113,14 +150,14 @@ func send(c *gin.Context) {
 	// 消息分段
 	// 为了解决企业微信 Markdown 消息体长度限制问题
 	var msgs []string
-	if content.Len() <= markdownMaxLen {
-		msgs = append(msgs, content.String())
+	if content.Len()+mentionSnippetLen <= markdownMaxLen {
+		msgs = append(msgs, content.String()+mentionSnippet)
 	} else {
 		// 分段消息标识头
 		snippetHeader := `<font color="comment">**(%d/%d)**</font>`
 
 		// 单条分段最大长度
-		snippetMaxLen := markdownMaxLen - len(snippetHeader)
+		snippetMaxLen := markdownMaxLen - len(snippetHeader) - mentionSnippetLen
 
 		// 消息切割
 		fragments := strings.Split(content.String(), emptyLine)
@@ -140,6 +177,8 @@ func send(c *gin.Context) {
 
 			// 拼接消息后超出限制长度
 			if snippetBuilder.Len()+len(fragment)+len(emptyLine) > snippetMaxLen {
+				// 添加提醒列表
+				snippetBuilder.WriteString(mentionSnippet)
 				msgs = append(msgs, snippetBuilder.String())
 				snippetBuilder.Reset()
 				snippetBuilder.Grow(snippetMaxLen)
@@ -149,6 +188,8 @@ func send(c *gin.Context) {
 			snippetBuilder.WriteString(fragment)
 		}
 
+		// 添加提醒列表
+		snippetBuilder.WriteString(mentionSnippet)
 		msgs = append(msgs, snippetBuilder.String())
 
 		// 添加分段头
