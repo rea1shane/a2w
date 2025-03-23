@@ -3,11 +3,11 @@ package main
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
 	"flag"
 	"fmt"
 	"io"
 	"net/http"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"text/template"
@@ -53,15 +53,17 @@ const (
 )
 
 var (
-	tmplPath, tmplName string
-	logger             *logrus.Logger
+	tmplDir, tmplName string
+	// key: 模板文件名称; value: 模板文件路径
+	tmplFiles map[string]string = make(map[string]string)
+	logger    *logrus.Logger
 )
 
 func main() {
 	// 解析命令行参数
 	logLevel := flag.String("log-level", "info", "日志级别。可选值：debug, info, warn, error")
 	addr := flag.String("addr", ":5001", "监听地址。格式: [host]:port")
-	flag.StringVar(&tmplPath, "template", "./templates/base.tmpl", "模板文件路径。")
+	flag.StringVar(&tmplDir, "template", "./templates", "模板文件所在目录。")
 	flag.Parse()
 
 	// 解析日志级别
@@ -70,9 +72,16 @@ func main() {
 		logrus.Panicf("日志级别解析失败: %s", *logLevel)
 	}
 
-	// 解析模板文件名称
-	split := strings.Split(tmplPath, "/")
-	tmplName = split[len(split)-1]
+	// 解析模板文件名称，获取所有后缀为 .tmpl 的文件
+	files, err := filepath.Glob(filepath.Join(tmplDir, "*.tmpl"))
+	if err != nil || len(files) == 0 {
+		logrus.Fatalf("无法从 %s 目录获取到模板文件: %v", tmplDir, err)
+	}
+	for _, file := range files {
+		split := strings.Split(file, "/")
+		tmplName := split[len(split)-1]
+		tmplFiles[tmplName] = file
+	}
 
 	// 创建 logger
 	logger = logrus.New()
@@ -100,7 +109,14 @@ func health(c *gin.Context) {
 func send(c *gin.Context) {
 	// 获取 bot key
 	key := c.Query("key")
-
+	// 获取模板名称
+	tmplNamePrefix := c.Query("tmpl")
+	if tmplNamePrefix == "" {
+		tmplName = "base.tmpl"
+	} else {
+		tmplName = fmt.Sprintf("%v.tmpl", tmplNamePrefix)
+	}
+	logrus.Debugf("将要使用的模板: %v", tmplFiles[tmplName])
 	// 获取提醒列表
 	mentions, exist := c.GetQueryArray("mention")
 	var mentionsBuilder strings.Builder
@@ -138,7 +154,7 @@ func send(c *gin.Context) {
 	tfm["timeFormat"] = timeFormat
 	tfm["timeDuration"] = timeDuration
 	tfm["timeFromNow"] = timeFromNow
-	tmpl := template.Must(template.New(tmplName).Funcs(tfm).ParseFiles(tmplPath))
+	tmpl := template.Must(template.New(tmplName).Funcs(tfm).ParseFiles(tmplFiles[tmplName]))
 	var content bytes.Buffer
 	if err := tmpl.Execute(&content, notification); err != nil {
 		e := c.Error(err)
@@ -169,7 +185,7 @@ func send(c *gin.Context) {
 		for _, fragment := range fragments {
 			// 切割后的单条消息都过长
 			if len(fragment)+len(emptyLine) > snippetMaxLen {
-				e := c.Error(errors.New(fmt.Sprintf("切割后的消息长度 %d 仍超出片段长度限制 %d", len(fragment), snippetMaxLen-len(emptyLine))))
+				e := c.Error(fmt.Errorf("切割后的消息长度 %d 仍超出片段长度限制 %d", len(fragment), snippetMaxLen-len(emptyLine)))
 				e.Meta = "分段消息失败"
 				c.Writer.WriteHeader(http.StatusBadRequest)
 				return
@@ -223,7 +239,7 @@ func send(c *gin.Context) {
 		wecomRespBody, _ := io.ReadAll(wecomResp.Body)
 		wecomResp.Body.Close()
 		if wecomResp.StatusCode != http.StatusOK || string(wecomRespBody) != okMsg {
-			e := c.Error(errors.New(string(wecomRespBody)))
+			e := c.Error(fmt.Errorf("%s", string(wecomRespBody)))
 			e.Meta = "请求企业微信失败，HTTP Code: " + strconv.Itoa(wecomResp.StatusCode)
 			c.Writer.WriteHeader(http.StatusInternalServerError)
 			return

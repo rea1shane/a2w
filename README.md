@@ -60,11 +60,24 @@ docker run --name a2w -d -p 5001:5001 -e TZ=Asia/Tokyo rea1shane/a2w
 
 ### 消息模板
 
-消息模板决定了企业微信机器人发出的消息格式，在启动 A2W 时通过 `--template` 指定模板。默认模板的使用说明见 [文档](https://github.com/rea1shane/a2w/blob/main/templates/base.md)。
+消息模板决定了企业微信机器人发出的消息格式，在启动 A2W 时通过 `--template` 指定模板文件所在目录。默认模板的使用说明见 [文档](https://github.com/rea1shane/a2w/blob/main/templates/base.md)。
 
 > [!NOTE]
 >
 > 因为企业微信机器人接口限制单条消息的最大长度为 4096，所以本软件会对大于此限制的长消息进行分段。如果你使用自定义模板，请在想要分段的地方留一个空行（在企业微信中，至少三个连续的 `\n` 才被认为是一个空行），以便本软件对消息进行正确的分段。
+
+使用 tmpl URL Query 可以指定要使用的其他模板（以便适应想要让不同的告警使用不同的模板场景）：
+
+```yaml
+receivers:
+  - name: "a2w"
+    webhook_configs:
+      - url: "http://{a2w_address}/send?tmpl=base_two&key={key}"
+```
+
+> [!Attention]
+>
+> 模板文件必须以 .tmpl 作为后缀，前缀要符合 URL 字符规范 [RFC 3986, Uniform Resource Identifier(URI): Generic Syntax](https://www.rfc-editor.org/rfc/rfc3986.html)。不要使用中文作为文件名。
 
 ### 用户提醒
 

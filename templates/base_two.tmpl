@@ -1,0 +1,24 @@
+二号模板
+{{ range $i, $alert := .Alerts }}
+
+    {{- if eq $alert.Status "firing" }}
+<font color="warning">**[firing] {{ $alert.Labels.alertname }}**</font>
+    {{- if $alert.Labels.level }}
+**警报等级**: {{ $alert.Labels.level }}
+    {{- end }}
+**触发时间**: {{ timeFormat ($alert.StartsAt) }}
+**持续时长**: {{ timeFromNow ($alert.StartsAt) }}
+        {{- if $alert.Annotations.current }}
+**当前状态**: {{ $alert.Annotations.current }}
+        {{- end }}
+    {{- else if eq $alert.Status "resolved"}}
+<font color="info">**[resolved] {{ $alert.Labels.alertname }}**</font>
+**触发时间**: {{ timeFormat ($alert.StartsAt) }}
+**恢复时间**: {{ timeFormat ($alert.EndsAt) }}
+**持续时长**: {{ timeDuration ($alert.StartsAt) ($alert.EndsAt) }}
+    {{- end }}
+    {{- if $alert.Annotations.labels }}
+**标签列表**: {{ $alert.Annotations.labels }}
+    {{- end }}
+
+{{ end }}
